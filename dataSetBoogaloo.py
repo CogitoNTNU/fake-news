@@ -33,10 +33,13 @@ def getDataSet(data, token):
     data_matrix = token.texts_to_sequences(data)
     for i in range(len(data_matrix)):
         prevTweet = data_matrix[i]
-        newTweet = [0 for j in range(TWEET_LENGTH - len(prevTweet))]
-        for value in prevTweet:
-            newTweet.append(value)
-        data_matrix[i] = newTweet
+        if len(prevTweet) < TWEET_LENGTH:
+            newTweet = [0 for j in range(TWEET_LENGTH - len(prevTweet))]
+            for value in prevTweet:
+                newTweet.append(value)
+            data_matrix[i] = newTweet
+        elif len(prevTweet) > TWEET_LENGTH:
+            data_matrix[i] = data_matrix[i][len(prevTweet)-TWEET_LENGTH:]
     return data_matrix
 
 def getDict(token):
@@ -51,5 +54,16 @@ def saveAsJSON(data, filename):
 data = dataLoad("trumpTweets.json")
 token = createTokenizer(data)
 wordDic = getDict(token)
-#dataSet = getDataSet(data, token)
-saveAsJSON(wordDic, "dataDic.json")
+dataSet = getDataSet(data, token)
+maxLength = 0
+minLength = 999999
+for tweet in dataSet:
+    if len(tweet) > maxLength:
+        maxLength = len(tweet)
+    if len(tweet) < minLength:
+        minLength = len(tweet)
+
+#saveAsJSON(wordDic, "dataDic.json")
+
+#TODO separate !, "," etc.
+#TODO clean out unicode
