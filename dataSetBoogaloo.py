@@ -44,4 +44,4 @@ print(token.sequences_to_texts([data_matrix[28]]))
 print(data[28])
 print(len(data_matrix[28]))
 print(token.sequences_to_texts([[i]for i in range(3500)]))
-json.
+token_data = json.dump(data_matrix, open("dataSet.json", "w"))
