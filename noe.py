@@ -30,16 +30,20 @@ with open('trumptweets.json') as json_file:
     categoric = to_categorical(labels,32105)
     labels = categoric
 """
+data = dataSetBoogaloo.dataLoad("trumpTweets.json")
+t = dataSetBoogaloo.createTokenizer(data)
+wordDic = dataSetBoogaloo.getDict(t)
 dataset = pd.read_json("./dataset.json")
 print(len(dataset))
 print(dataset.head(10))
 X = dataset.iloc[:,:23709].values
 Y = dataset.iloc[:,23709:23710].values
+for i in range(23710):
+    labels.append(i)
+labels = to_categorical(labels,23710)
 print(X,Y)
 v_size = 3500
-t = Tokenizer()
-enc_docs = t.texts_to_sequences(dataset)
-pad_docs = pad_sequences(enc_docs)
+pad_docs = dataset
 embeddings_index = dict()
 f = open('glove/glove.twitter.27B.100d.txt')
 for line in f:
@@ -50,10 +54,10 @@ for line in f:
 f.close()
 # create a weight matrix for words in training docs
 embedding_matrix = np.zeros((v_size, 100))
-for word, i in t.word_index.items():
+for word in wordDic:
 	embedding_vector = embeddings_index.get(word)
 	if embedding_vector is not None:
-		embedding_matrix[i] = embedding_vector
+		embedding_matrix[wordDic.index(word)] = embedding_vector
 # define model
 model = Sequential()
 e = Embedding(v_size, 100, weights=[embedding_matrix], input_length=61, trainable=False)
@@ -61,10 +65,7 @@ model.add(e)
 model.add(Masking(mask_value=0.0))
 model.add(LSTM(50))
 model.add(Dropout(0.75))
-model.add(Dense(32105, activation='sigmoid'))
-model.compile(loss='binary_crossentropy',
-              optimizer='rmsprop',
-              metrics=['accuracy'])
+model.add(Dense(23710, activation='sigmoid'))
 # compile the model
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 # summarize the model
