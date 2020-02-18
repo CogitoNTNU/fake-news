@@ -11,12 +11,13 @@ from keras.preprocessing.text import Tokenizer
 from keras.layers import LSTM
 from keras.utils import to_categorical
 from keras.layers import Masking
+import dataSetBoogaloo
 data = ""
 atestset = []
 labels = []
 output_size = 3500
 categoric = ""
-
+"""
 with open('trumptweets.json') as json_file:
     data = json.load(json_file)
     i=0
@@ -28,17 +29,16 @@ with open('trumptweets.json') as json_file:
         i+=1
     categoric = to_categorical(labels,32105)
     labels = categoric
-
-dataset = pd.read_json("./trumptweets.json")
+"""
+dataset = pd.read_json("./dataset.json")
+print(len(dataset))
 print(dataset.head(10))
-X = dataset.iloc[:,:32105].values
-Y = dataset.iloc[:,31205:32106].values
+X = dataset.iloc[:,:23709].values
+Y = dataset.iloc[:,23709:23710].values
 print(X,Y)
+v_size = 3500
 t = Tokenizer()
-t.fit_on_texts(atestset)
-v_size = len(t.word_index) + 1
-print(v_size)
-enc_docs = t.texts_to_sequences(atestset)
+enc_docs = t.texts_to_sequences(dataset)
 pad_docs = pad_sequences(enc_docs)
 embeddings_index = dict()
 f = open('glove/glove.twitter.27B.100d.txt')
