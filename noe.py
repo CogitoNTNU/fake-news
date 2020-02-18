@@ -10,6 +10,7 @@ from keras.layers.embeddings import Embedding
 from keras.preprocessing.text import Tokenizer
 from keras.layers import LSTM
 from keras.utils import to_categorical
+from keras.layers import Masking
 data = ""
 atestset = []
 labels = []
@@ -23,7 +24,7 @@ with open('trumptweets.json') as json_file:
     for p in data:
         print(i,'text: ' + p['text'])
         atestset.append(p['text'])
-        labels.append(i)
+        labels.append(i%4300)
         i+=1
     categoric = to_categorical(labels,32105)
     labels = categoric
@@ -57,8 +58,9 @@ for word, i in t.word_index.items():
 model = Sequential()
 e = Embedding(v_size, 100, weights=[embedding_matrix], input_length=61, trainable=False)
 model.add(e)
+model.add(Masking(mask_value=0.0))
 model.add(LSTM(50))
-model.add(Dropout(0.5))
+model.add(Dropout(0.75))
 model.add(Dense(32105, activation='sigmoid'))
 model.compile(loss='binary_crossentropy',
               optimizer='rmsprop',
