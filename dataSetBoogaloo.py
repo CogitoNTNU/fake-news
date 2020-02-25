@@ -10,6 +10,9 @@ TWEET_LENGTH = 50
 def dataLoad(file):
     TrumpDump = open(file, encoding="UTF-8")
     data = json.load(TrumpDump)
+    mentionSet = []
+    linkSet = []
+    hashtagSet = []
     for i in range(len(data)):
         data[i] = data[i]["text"].split(" ")
         oldTweet = data[i]
@@ -18,25 +21,32 @@ def dataLoad(file):
             word = word.replace("\u2019","'")
             if not re.search("[!.,?]$",word):
                 if "http" in word:
+                    linkSet.append(word)
                     word = "thisisalink"
                 elif "@" in word:
+                    mentionSet.append(word)
                     word = "thisisamention"
                 elif "#" in word:
+                    hashtagSet.append(word)
                     word = "thisisahashtag"
                 newTweet.append(word)
             else:
                 lastchar = word[-1]
                 word = word[0:-1]
                 if "http" in word:
+                    linkSet.append(word)
                     word = "thisisalink"
                 elif "@" in word:
+                    mentionSet.append(word)
                     word = "thisisamention"
                 elif "#" in word:
+                    hashtagSet.append(word)
                     word = "thisisahashtag"
                 newTweet.append(word)
                 newTweet.append(lastchar)
         data[i] = " ".join(newTweet)
-    return data
+    print(linkSet)
+    return data,linkSet,mentionSet,hashtagSet
 
 
 def createTokenizer(data):
@@ -60,12 +70,15 @@ def saveAsJSON(data, filename):
     json.dump(data, open(filename,"w"))
 
 
-data = dataLoad("trumpTweets.json")
+data,linkSet,mentionSet,hashtagSet = dataLoad("trumpTweets.json")
 token = createTokenizer(data)
 wordDic = getDict(token)
 dataSet = getDataSet(data, token)
 saveAsJSON(wordDic, "dataDic.json")
 saveAsJSON(dataSet,"dataSet.json")
+saveAsJSON(linkSet,"linkSet.json")
+saveAsJSON(mentionSet,"mentionSet.json")
+saveAsJSON(hashtagSet,"hashtagSet.json")
 maxLength = 0
 minLength = 999999
 """
