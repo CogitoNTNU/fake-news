@@ -54,10 +54,11 @@ for line in f:
 f.close()
 # create a weight matrix for words in training docs
 embedding_matrix = np.zeros((v_size, 100))
-for word in wordDic:
-	embedding_vector = embeddings_index.get(word)
-	if embedding_vector is not None:
-		embedding_matrix[wordDic.index(word)] = embedding_vector
+for i in range(len(wordDic)):
+    for j in range(len(wordDic[i])):
+	    embedding_vector = embeddings_index.get(wordDic[j])
+	    if embedding_vector is not None:
+		    embedding_matrix[j] = embedding_vector
 # define model
 model = Sequential()
 e = Embedding(v_size, 100, weights=[embedding_matrix], input_length=61, trainable=False)
