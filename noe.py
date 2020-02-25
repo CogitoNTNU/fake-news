@@ -32,7 +32,7 @@ print(new_dataset.shape)
 
 labels = to_categorical(labels,v_size)
 print(labels)
-model = md.generateModel()
+model = md.generateWideModel()
 
 print(model.summary())
 # fit the model
