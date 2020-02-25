@@ -15,7 +15,7 @@ dataset = list(dataset)
 v_size = 3500
 new_dataset = []
 labels = []
-for i in range(12000):#range(len(dataset)):
+for i in range(len(dataset)):#range(len(dataset)):
     while len(dataset[i]) > 0:
         if dataset[i][-1] == 0:
             break

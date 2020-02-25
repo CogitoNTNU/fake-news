@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers import Dense,Dropout
+from keras.layers import Dense,Dropout,Activation,BatchNormalization,SimpleRNN
 from keras.layers import Flatten
 from keras.layers.embeddings import Embedding
 from keras.layers import LSTM
@@ -15,7 +15,7 @@ with open("./dataDic.json") as f:
 def generateModel():
     embeddings_index = np.zeros(shape=(VOCABULARY_SIZE, 100))
 
-    f = open('C:/Program Files (x86)/Cogito Data/glove/glove.6B.100d.txt', encoding="UTF-8")
+    f = open('./glove/glove.twitter.27B.100d.txt', encoding="UTF-8")
     for line in f:
         values = line.split()
         word = values[0]
@@ -31,11 +31,21 @@ def generateModel():
     model.add(e)
     #model.add(Masking(mask_value=0.0))
     model.add(LSTM(100,return_sequences=True))
+    model.add(LSTM(100, return_sequences=True))
+    model.add(Dropout(0.1))
+    model.add(LSTM(100,return_sequences=True))
+    model.add(Dropout(0.1))
     model.add(LSTM(100))
+    model.add(Dropout(0.1))
+    model.add(BatchNormalization())
+    model.add(Dense(100,activation='relu'))
+    model.add(Dropout(0.1))
     model.add(Dense(100))
-    model.add(Dropout(0.25))
+    model.add(Dropout(0.1))
+    model.add(Dense(100))
+    model.add(Dropout(0.2))
     model.add(Dense(VOCABULARY_SIZE, activation='sigmoid'))
     # compile the model
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
