@@ -8,6 +8,8 @@ atestset = []
 labels = []
 output_size = 3500
 WORD_COUNT = 50
+LOAD_WEIGHT=True
+WEIGHT_FILE = "weights0.h5"
 categoric = ""
 
 dataset = pd.read_json("./dataSet.json").to_numpy()
@@ -15,9 +17,9 @@ dataset = list(dataset)
 v_size = 3500
 new_dataset = []
 labels = []
-for i in range(12000):#range(len(dataset)):
-    while len(dataset[i]) > 0:
-        if dataset[i][-1] == 0:
+for i in range(len(dataset)):
+    while len(dataset[i]) > 1:
+        if dataset[i][-1] == 0 and dataset[i][-2] == 0:
             break
         #print(dataset[i][:].shape)
         #print([0]*(WORD_COUNT-len(dataset[i][:])))
@@ -33,9 +35,10 @@ print(new_dataset.shape)
 labels = to_categorical(labels,v_size)
 print(labels)
 model = md.generateModel()
-
+if (LOAD_WEIGHT):
+    model.load_weights(WEIGHT_FILE)
 print(model.summary())
 # fit the model
-model.fit(new_dataset, labels, validation_split=0.1, epochs=2)
-
-model.save_weights("weights.h5")
+for i in range(10):
+    model.fit(new_dataset, labels, validation_split=0.1, epochs=2)
+    model.save_weights("weights" + str(i) + ".h5")
