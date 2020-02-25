@@ -1,76 +1,40 @@
 import json
 import numpy as np
 import pandas as pd
-from keras.preprocessing.text import one_hot
-from keras.preprocessing.sequence import pad_sequences
-from keras.models import Sequential
-from keras.layers import Dense,Dropout
-from keras.layers import Flatten
-from keras.layers.embeddings import Embedding
-from keras.preprocessing.text import Tokenizer
-from keras.layers import LSTM
 from keras.utils import to_categorical
-from keras.layers import Masking
-import dataSetBoogaloo
+import model as md
 data = ""
 atestset = []
 labels = []
 output_size = 3500
+WORD_COUNT = 50
 categoric = ""
-"""
-with open('trumptweets.json') as json_file:
-    data = json.load(json_file)
-    i=0
-    g=0
-    for p in data:
-        print(i,'text: ' + p['text'])
-        atestset.append(p['text'])
-        labels.append(i%4300)
-        i+=1
-    categoric = to_categorical(labels,32105)
-    labels = categoric
-"""
-dataset = pd.read_json("./dataset.json")
-print(len(dataset))
-print(dataset.head(10))
-X = dataset.iloc[:,:23709].values
-Y = dataset.iloc[:,23709:23710].values
-print(X,Y)
+
+dataset = pd.read_json("./dataSet.json").to_numpy()
+dataset = list(dataset)
 v_size = 3500
-t = Tokenizer()
-enc_docs = t.texts_to_sequences(dataset)
-pad_docs = pad_sequences(enc_docs)
-embeddings_index = dict()
-f = open('glove/glove.twitter.27B.100d.txt')
-for line in f:
-	values = line.split()
-	word = values[0]
-	coefs = np.asarray(values[1:], dtype='float32')
-	embeddings_index[word] = coefs
-f.close()
-# create a weight matrix for words in training docs
-embedding_matrix = np.zeros((v_size, 100))
-for word, i in t.word_index.items():
-	embedding_vector = embeddings_index.get(word)
-	if embedding_vector is not None:
-		embedding_matrix[i] = embedding_vector
-# define model
-model = Sequential()
-e = Embedding(v_size, 100, weights=[embedding_matrix], input_length=61, trainable=False)
-model.add(e)
-model.add(Masking(mask_value=0.0))
-model.add(LSTM(50))
-model.add(Dropout(0.75))
-model.add(Dense(32105, activation='sigmoid'))
-model.compile(loss='binary_crossentropy',
-              optimizer='rmsprop',
-              metrics=['accuracy'])
-# compile the model
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-# summarize the model
+new_dataset = []
+labels = []
+for i in range(12000):#range(len(dataset)):
+    while len(dataset[i]) > 0:
+        if dataset[i][-1] == 0:
+            break
+        #print(dataset[i][:].shape)
+        #print([0]*(WORD_COUNT-len(dataset[i][:])))
+        new_dataset +=[[0]*(WORD_COUNT-len(dataset[i][:]))+list(dataset[i][:-1])]
+        labels+=[dataset[i][-1]]
+        dataset[i] = dataset[i][:-1]
+print(labels)
+new_dataset = np.array(new_dataset)
+print(new_dataset.shape)
+#labels=[dataset[i][49] for i in range(len(dataset))]
+#dataset = np.array([dataset[i][0:49] for i in range(len(dataset))])
+
+labels = to_categorical(labels,v_size)
+print(labels)
+model = md.generateModel()
 print(model.summary())
 # fit the model
-model.fit(pad_docs, labels, validation_data=(pad_docs, labels), epochs=2, verbose=0.2)
-# evaluate the model
-loss, accuracy = model.evaluate(pad_docs, labels, verbose=0.2)
-print('Accuracy: %f' % (accuracy*100))
+model.fit(new_dataset, labels, validation_split=0.1, epochs=2)
+
+model.save_weights("weights.h5")
