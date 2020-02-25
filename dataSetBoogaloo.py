@@ -50,3 +50,15 @@ wordDic = getDict(token)
 dataSet = getDataSet(data, token)
 saveAsJSON(wordDic, "dataDic.json")
 saveAsJSON(dataSet,"dataSet.json")
+maxLength = 0
+minLength = 999999
+for tweet in dataSet:
+    if len(tweet) > maxLength:
+        maxLength = len(tweet)
+    if len(tweet) < minLength:
+        minLength = len(tweet)
+
+#saveAsJSON(wordDic, "dataDic.json")
+
+#TODO separate !, "," etc.
+#TODO clean out unicode

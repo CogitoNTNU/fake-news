@@ -33,6 +33,7 @@ print(new_dataset.shape)
 labels = to_categorical(labels,v_size)
 print(labels)
 model = md.generateModel()
+
 print(model.summary())
 # fit the model
 model.fit(new_dataset, labels, validation_split=0.1, epochs=2)
