@@ -1,7 +1,7 @@
 import json
 import random
 import keras
-
+import re
 
 DICTIONARY_LENGTH = 3500
 TWEET_LENGTH = 50
@@ -12,27 +12,43 @@ def dataLoad(file):
     data = json.load(TrumpDump)
     for i in range(len(data)):
         data[i] = data[i]["text"].split(" ")
-        for j in range(len(data[i])):
-            #print(data[i][j])
-            if "http" in data[i][j]:
-                data[i][j] = "thisisalink"
-            elif "@" in data[i][j]:
-                data[i][j] = "thisisamention"
-            elif "#" in data[i][j]:
-                data[i][j] = "thisisahashtag"
-        data[i] = " ".join(data[i])
+        oldTweet = data[i]
+        newTweet=[]
+        for word in oldTweet:
+            word = word.replace("\u2019","'")
+            if not re.search("[!.,?]$",word):
+                if "http" in word:
+                    word = "thisisalink"
+                elif "@" in word:
+                    word = "thisisamention"
+                elif "#" in word:
+                    word = "thisisahashtag"
+                newTweet.append(word)
+            else:
+                lastchar = word[-1]
+                word = word[0:-1]
+                if "http" in word:
+                    word = "thisisalink"
+                elif "@" in word:
+                    word = "thisisamention"
+                elif "#" in word:
+                    word = "thisisahashtag"
+                newTweet.append(word)
+                newTweet.append(lastchar)
+        data[i] = " ".join(newTweet)
     return data
 
 
 def createTokenizer(data):
-    token = keras.preprocessing.text.Tokenizer(num_words=DICTIONARY_LENGTH, filters='!"“”#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True, split=' ', char_level=False, oov_token=None, document_count=0)
+    token = keras.preprocessing.text.Tokenizer(num_words=DICTIONARY_LENGTH, filters='"“”#$%&()*+-/:;<=>@[\\]^_`{|}~\t\n', lower=True, split=' ', char_level=False, oov_token=None, document_count=0)
     token.fit_on_texts(data)
     return token
 
 def getDataSet(data, token):
     data_matrix = token.texts_to_sequences(data)
     for i in range(len(data_matrix)):
-        data_matrix[i] = [0]*(TWEET_LENGTH-len(data_matrix[i]))+data_matrix[i][0:min(TWEET_LENGTH,len(data_matrix[i]))]
+        data_matrix[i].append(0)
+        data_matrix[i] = [0]*(TWEET_LENGTH-len(data_matrix[i])) + data_matrix[i][0:min(TWEET_LENGTH,len(data_matrix[i]))]
     return data_matrix
 
 def getDict(token):
@@ -52,13 +68,10 @@ saveAsJSON(wordDic, "dataDic.json")
 saveAsJSON(dataSet,"dataSet.json")
 maxLength = 0
 minLength = 999999
+"""
 for tweet in dataSet:
     if len(tweet) > maxLength:
         maxLength = len(tweet)
     if len(tweet) < minLength:
         minLength = len(tweet)
-
-#saveAsJSON(wordDic, "dataDic.json")
-
-#TODO separate !, "," etc.
-#TODO clean out unicode
+"""
