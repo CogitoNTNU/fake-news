@@ -2,3 +2,7 @@ glove/glove.twitter.27B.25d.txt
 glove/glove.twitter.27B.50d.txt
 glove/glove.twitter.27B.100d.txt
 glove/glove.twitter.27B.200d.txt
+weights.h5
+__pycache__/model.cpython-37.pyc
+cog.code-workspace
+__pycache__/model.cpython-37.pyc

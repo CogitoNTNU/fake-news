@@ -1,10 +1,10 @@
 import model as md
 import numpy as np
-model = md.generateModel()
+model = md.generateWideModel()
 
 model.load_weights("weights.h5")
 
-x = "make america great"
+x = "we need to build a"
 x=x.lower()
 x=x.split(" ")
 x = [md.dataDic.index(i) for i in x]
