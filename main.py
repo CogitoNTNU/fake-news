@@ -30,7 +30,7 @@ print(new_dataset.shape)
 #dataset = np.array([dataset[i][0:49] for i in range(len(dataset))])
 
 labels = to_categorical(labels,VOCABULARY_SIZE)
-model = md.generateModel6()
+model = md.generateModel30()
 if (LOAD_WEIGHT):
     model.load_weights(WEIGHT_FILE)
 print(model.summary())
