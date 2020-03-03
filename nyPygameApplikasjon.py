@@ -123,6 +123,8 @@ def main():
         screen.blit(tweetButton, (550,300))
         #print text
         blit_text(screen, text, (15, 105), font, input_box1.getWidth())
+        commentText = 'hello'
+        blit_text(screen, commentText, (0,550), font, 71)
         for box in input_boxes:
             box.draw(screen)
 
