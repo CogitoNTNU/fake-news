@@ -1,6 +1,6 @@
 from keras.models import Sequential
 from keras.layers import Dense,Dropout, BatchNormalization
-from keras.layers import Flatten
+from keras.layers import Flatten, Input, Concatenate,Model,LSTM
 from keras.layers.embeddings import Embedding
 from keras.layers import CuDNNLSTM
 from keras.utils import to_categorical
@@ -111,4 +111,20 @@ def generateModel5():
     # compile the model
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
+    return model
+
+def generateNSModel():
+    embeddings_index = loadEmbeddings()
+
+    ord = Input(shape=(49,))
+    caps = Input(shape=(49,3))
+    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)(ord)
+    out = Concatenate(axis=2)([e,caps])
+    out = LSTM(128)(out)
+    out = Dense(256, activation='relu')(out)
+    out = BatchNormalization()(out)
+    out = Dense(VOCABULARY_SIZE+3, activation='sigmoid')(out)
+    print(out.shape)
+    model = Model(inputs = [ord,caps], output = out)
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
