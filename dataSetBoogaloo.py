@@ -13,7 +13,9 @@ def dataLoad(file):
     mentionSet = []
     linkSet = []
     hashtagSet = []
+    wordCaseSet = []
     for i in range(len(data)):
+        wordCaseSet.append([])
         data[i] = data[i]["text"].split(" ")
         oldTweet = data[i]
         newTweet=[]
@@ -29,6 +31,9 @@ def dataLoad(file):
                 elif "#" in word:
                     hashtagSet.append(word)
                     word = "thisisahashtag"
+                word = "".join(re.findall("[A-Za-z0-9.!,']", word))
+                if word == "":
+                    continue
                 newTweet.append(word)
             else:
                 lastchar = word[-1]
@@ -42,10 +47,13 @@ def dataLoad(file):
                 elif "#" in word:
                     hashtagSet.append(word)
                     word = "thisisahashtag"
+                word = "".join(re.findall("[A-Za-z0-9.!,']",word))
+                if word == "":
+                    newTweet.append(lastchar)
+                    continue
                 newTweet.append(word)
                 newTweet.append(lastchar)
-        data[i] = " ".join(newTweet)
-    print(linkSet)
+        data[i] = newTweet
     return data,linkSet,mentionSet,hashtagSet
 
 
@@ -54,12 +62,29 @@ def createTokenizer(data):
     token.fit_on_texts(data)
     return token
 
-def getDataSet(data, token):
+def getDataSet(data, token, wordDic):
     data_matrix = token.texts_to_sequences(data)
+    wordCaseSet = [[[1,0,0] for stuff in range(50)] for otherStuff in range(len(data_matrix))]
     for i in range(len(data_matrix)):
+
         data_matrix[i].append(0)
         data_matrix[i] = [0]*(TWEET_LENGTH-len(data_matrix[i])) + data_matrix[i][0:min(TWEET_LENGTH,len(data_matrix[i]))]
-    return data_matrix
+
+        oldTweet = data[i][::-1]
+        oldTweetLower = [word.lower() for word in oldTweet]
+        for j in range(len(data_matrix[i]) - 1 , -1 , -1):
+            if data_matrix[i][j] != 0:
+                wordIndex = oldTweetLower.index(wordDic[data_matrix[i][j]].lower())# next(k for k,v in enumerate(oldTweet) if v.lower() == wordDic[data_matrix[i][j]].lower())
+                if oldTweet[wordIndex].isupper():
+                    wordCaseSet[i][j] = [0,0,1]
+                elif oldTweet[wordIndex][0].isupper():
+                    wordCaseSet[i][j] = [0,1,0]
+                del oldTweet[wordIndex]
+                del oldTweetLower[wordIndex]
+
+
+
+    return data_matrix, wordCaseSet
 
 def getDict(token):
     numSequence = [[i] for i in range(DICTIONARY_LENGTH)]
@@ -73,15 +98,18 @@ def saveAsJSON(data, filename):
 data,linkSet,mentionSet,hashtagSet = dataLoad("trumpTweets.json")
 token = createTokenizer(data)
 wordDic = getDict(token)
-dataSet = getDataSet(data, token)
+dataSet, wordCaseSet = getDataSet(data, token, wordDic)
+
 saveAsJSON(wordDic, "dataDic.json")
 saveAsJSON(dataSet,"dataSet.json")
 saveAsJSON(linkSet,"linkSet.json")
 saveAsJSON(mentionSet,"mentionSet.json")
 saveAsJSON(hashtagSet,"hashtagSet.json")
+saveAsJSON(wordCaseSet, "wordCaseSet.json")
+
+"""
 maxLength = 0
 minLength = 999999
-"""
 for tweet in dataSet:
     if len(tweet) > maxLength:
         maxLength = len(tweet)
