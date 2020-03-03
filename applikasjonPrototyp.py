@@ -1,5 +1,5 @@
 
-import thorpy, pygame
+import thorpy, pygame,predict
 
 class MyGame(object):
 
@@ -8,7 +8,7 @@ class MyGame(object):
         self.textBox = thorpy.make_text(text="",
                                           font_color=(0,0,0),
                                           font_size=20,)
-        self.textBox.set_font("HELVETICA")
+        self.textBox.set_font("Arial")
         #the inserter element in which player can insert his guess
         self.insertBox = thorpy.Inserter(name="")
         self.insertBox.set_size((200,20))
@@ -45,7 +45,12 @@ class MyGame(object):
         menu.play()
     
 def makePrediction(inputText):
-    return inputText
+    try:
+        outputText = predict.generate_text([inputText])
+    except Exception as e:
+        outputText = ["Dette er ikke et ord Trump kjenner igjen, prøv på nytt"]
+        print(e)
+    return outputText[0]
 application = thorpy.Application(size=(1200, 630), caption="Trump tweet simulator")
 mygame = MyGame()
 mygame.launchGame()

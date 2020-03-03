@@ -5,9 +5,9 @@ import random
 #from gtts import gTTS
 #from playsound import playsound
 #from io import BytesIO
-model = md.generateModel5()
+model = md.generateModel30()
 
-model.load_weights("weights8.h5")
+model.load_weights("weightsbigdenser17.h5")
 with open("mentionSet.json") as f:
     mentions = json.load(f)
 with open("hashtagSet.json") as f:

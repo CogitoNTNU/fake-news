@@ -1,6 +1,6 @@
-from keras.models import Sequential
+from keras.models import Sequential,Model
 from keras.layers import Dense,Dropout, BatchNormalization
-from keras.layers import Flatten, Input, Concatenate,Model,LSTM
+from keras.layers import Flatten, Input, Concatenate,LSTM
 from keras.layers.embeddings import Embedding
 from keras.layers import CuDNNLSTM
 from keras.utils import to_categorical
@@ -12,7 +12,7 @@ dataDic = []
 with open("./dataDic.json") as f:
     dataDic = json.load(f)
 
-EMBEDDING_FILE="C:/Program Files (x86)/Cogito Data/glove/glove.twitter.27B.100d.txt"
+EMBEDDING_FILE="./glove/glove.twitter.27B.100d.txt"
 def loadEmbeddings():
     embeddings_index = np.zeros(shape=(VOCABULARY_SIZE, 100))
 
@@ -23,6 +23,7 @@ def loadEmbeddings():
         coefs = np.asarray(values[1:], dtype='float16')
         try:
             embeddings_index[dataDic.index(word)] = coefs
+            pass
         except Exception as e:
             pass
     f.close()
@@ -113,12 +114,30 @@ def generateModel5():
 
     return model
 
+def generateModel30():
+    embeddings_index = loadEmbeddings()
+
+    model = Sequential()
+    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)
+    model.add(e)
+    #model.add(Masking(mask_value=0.0))
+    model.add(LSTM(64))
+    model.add(Dense(128,activation='relu'))
+    model.add(Dense(256,activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.2))
+    model.add(Dense(VOCABULARY_SIZE, activation='sigmoid'))
+    # compile the model
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+    return model
+
 def generateNSModel():
     embeddings_index = loadEmbeddings()
 
     ord = Input(shape=(49,))
     caps = Input(shape=(49,3))
-    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)(ord)
+    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=True)(ord)
     out = Concatenate(axis=2)([e,caps])
     out = LSTM(128)(out)
     out = Dense(256, activation='relu')(out)

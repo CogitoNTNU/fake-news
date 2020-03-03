@@ -31,11 +31,11 @@ print(new_dataset.shape)
 #dataset = np.array([dataset[i][0:49] for i in range(len(dataset))])
 
 labels = to_categorical(labels,VOCABULARY_SIZE)
-model = md.generateModel5()
+model = md.generateModel30()
 if (LOAD_WEIGHT):
     model.load_weights(WEIGHT_FILE)
 print(model.summary())
 # fit the model
 for i in range(10):
-    model.fit(new_dataset, labels, validation_split=0.1, epochs=2,batch_size=128)
+    model.fit(new_dataset, labels, validation_split=0.1, epochs=2,batch_size=512, use_multiprocessing=True)
     model.save_weights("weights" + str(i) + ".h5")
