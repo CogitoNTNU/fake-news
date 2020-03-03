@@ -2,15 +2,14 @@ import json
 import numpy as np
 import pandas as pd
 from keras.utils import to_categorical
+from keras.callbacks.callbacks import ModelCheckpoint
 import model as md
-data = ""
-atestset = []
+
 labels = []
 VOCABULARY_SIZE = 3500
 WORD_COUNT = 50
-LOAD_WEIGHT=False
-WEIGHT_FILE = "weights1.h5"
-categoric = ""
+LOAD_WEIGHT=True
+WEIGHT_FILE = "weights/weights1.h5"
 
 dataset = pd.read_json("./dataSet.json").to_numpy()
 dataset = list(dataset)
@@ -31,11 +30,13 @@ print(new_dataset.shape)
 #dataset = np.array([dataset[i][0:49] for i in range(len(dataset))])
 
 labels = to_categorical(labels,VOCABULARY_SIZE)
-model = md.generateModel5()
+model = md.generateModel6()
 if (LOAD_WEIGHT):
     model.load_weights(WEIGHT_FILE)
 print(model.summary())
 # fit the model
+
+checkpoint = ModelCheckpoint(filepath="weights/",save_best_only=True, save_weights_only=True, verbose=1)
 for i in range(10):
-    model.fit(new_dataset, labels, validation_split=0.1, epochs=2,batch_size=128)
-    model.save_weights("weights" + str(i) + ".h5")
+    model.fit(new_dataset, labels, validation_split=0.1, epochs=100,batch_size=32,callbacks=[checkpoint])
+    print("finished!")
