@@ -1,10 +1,11 @@
 from keras.models import Sequential,Model
 from keras.layers import Dense,Dropout, BatchNormalization
-from keras.layers import Flatten, Input, Concatenate,LSTM
+from keras.layers import Flatten, Input, Concatenate,LSTM,GRU
 from keras.layers.embeddings import Embedding
 from keras.layers import CuDNNLSTM, LSTM, Concatenate, Input
 from keras.utils import to_categorical
 from keras.layers import Masking
+from keras import optimizers
 import json
 import numpy as np
 VOCABULARY_SIZE=3500
@@ -142,7 +143,6 @@ def generateModel6(embeddings_index = embeddings_index):
     return model
 
 def generateModel30():
-    embeddings_index = loadEmbeddings()
 
     model = Sequential()
     e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)
@@ -153,6 +153,25 @@ def generateModel30():
     model.add(Dense(1024,activation='relu'))
     model.add(BatchNormalization())
     model.add(Dropout(0.2))
+    adam = optimizers.adam(learning_rate=0.5)
+    model.add(Dense(VOCABULARY_SIZE, activation='sigmoid'))
+    # compile the model
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+    return model
+def generateModel31():
+
+    model = Sequential()
+    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)
+    model.add(e)
+    #model.add(Masking(mask_value=0.0))
+    model.add(LSTM(256, return_sequences=True))
+    model.add(GRU(256))
+    model.add(Dense(512,activation='relu'))
+    model.add(Dense(1024,activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.2))
+    adam = optimizers.adam(learning_rate=0.5)
     model.add(Dense(VOCABULARY_SIZE, activation='sigmoid'))
     # compile the model
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -170,7 +189,6 @@ def generateNSModel():
     out = Dense(256, activation='relu')(out)
     out = BatchNormalization()(out)
     out = Dense(VOCABULARY_SIZE+3, activation='sigmoid')(out)
-    print(out.shape)
     model = Model(inputs = [ord,caps], output = out)
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
