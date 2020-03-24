@@ -8,39 +8,72 @@ from keras.layers import Masking
 from keras import optimizers
 import json
 import numpy as np
-VOCABULARY_SIZE=3500
+from config import VOCABULARY_SIZE, TWEET_LENGTH, EMBEDDING_FILE_LOCATION
+
+#Laster inn det ferdigdefinerte vokabulæret til trump som er VOCABULARY_SIZE langt
 dataDic = []
-with open("./dataDic.json") as f:
+with open("data/dataDic.json") as f:
     dataDic = json.load(f)
 
-EMBEDDING_FILE="./glove/glove.twitter.27B.100d.txt"
+#Henter embeddingene definert i glove filen
 def loadEmbeddings():
+    #Starter med å definere alle som 0
     embeddings_index = np.zeros(shape=(VOCABULARY_SIZE, 100))
-    embeddings_dict = {}
-    f = open(EMBEDDING_FILE, encoding="UTF-8")
+    #Definerer nullvektoren
+    embeddings_dict = {"": 0}
+
+    # Embeddings_index_predict er alle embeddingsene i hele glove filen, i motsetting til embeddings_index som kun er
+    # Trump sitt vokabulær
+    f = open(EMBEDDING_FILE_LOCATION, encoding="UTF-8")
+    embeddings_index_predict = np.zeros(shape=(len([i for i in f])+1, 100))
+    f.close()
+
+    f = open(EMBEDDING_FILE_LOCATION, encoding="UTF-8")
+
     i = 0
     for line in f:
+        #word er lik ordet til embeddingene
+        #coefs er lik de faktiske verdiene knyttet til ordet
         values = line.split()
         word = values[0]
         coefs = np.asarray(values[1:], dtype='float16')
-        #print(word)
+
         try:
+            #Legger de riktige embeddingene
             if (word in dataDic):
                 embeddings_index[dataDic.index(word)] = coefs
-            #embeddings_dict[word] = i
+            embeddings_index_predict[i+1]=coefs
+            embeddings_dict[word] = i+1
         except Exception as e:
-            pass
+            print(e)
+
         i+=1
+        # Bryter av etter 400000 ord, ettersom det virker som embeddingene hovedsakelig er på andre språk etter dette,
+        # Dette kan økes hvis man vil ha større vokabulær i applikasjonen
+        # if i == 400000:
+        #    break
     f.close()
-    print(len(embeddings_dict))
-    return embeddings_index,embeddings_dict
+    print(len(embeddings_index_predict))
+    return embeddings_index,embeddings_index_predict,embeddings_dict
 
-embeddings_index,embeddings_dict = loadEmbeddings()
+#Laster inn embeddingene
+embeddings_index,embeddings_index_predict,embeddings_dict = loadEmbeddings()
 
-def generateModel():
-    embeddings_index = loadEmbeddings()
+#Denne funkjsonen generer embedding laget
+# Når man trener, laster den kun inn de embeddingene man trenger for å trene, mens
+# når man predikterer, bruker den alle embeddingene, slikt at man kan bruke ord applikasjonen ikke har trent på en gang
+def generateEmbeddingLayer(training = True):
+    if training:
+        e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=TWEET_LENGTH-1, trainable=False,name="embedding_train")
+    else:
+        e = Embedding(len(embeddings_index_predict), 100, weights=[embeddings_index_predict], input_length=TWEET_LENGTH-1, trainable=False, name="embedding_predict")
+
+    return e
+
+
+def generateModel(training = True):
     model = Sequential()
-    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)
+    e = generateEmbeddingLayer(training)
     model.add(e)
     #model.add(Masking(mask_value=0.0))
     model.add(CuDNNLSTM(100,return_sequences=True))
@@ -52,11 +85,10 @@ def generateModel():
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
-def generateModel2():
-    embeddings_index = loadEmbeddings()
+def generateModel2(training = True):
 
     model = Sequential()
-    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)
+    e = generateEmbeddingLayer(training)
     model.add(e)
     #model.add(Masking(mask_value=0.0))
     model.add(CuDNNLSTM(400,return_sequences=True))
@@ -71,11 +103,10 @@ def generateModel2():
 
     return model
 
-def generateModel3():
-    embeddings_index = loadEmbeddings()
+def generateModel3(training = True):
 
     model = Sequential()
-    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)
+    e = generateEmbeddingLayer(training)
     model.add(e)
     #model.add(Masking(mask_value=0.0))
     model.add(LSTM(50,return_sequences=True))
@@ -89,11 +120,10 @@ def generateModel3():
 
     return model
 
-def generateModel4():
-    embeddings_index = loadEmbeddings()
+def generateModel4(training = True):
 
     model = Sequential()
-    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)
+    e = generateEmbeddingLayer(training)
     model.add(e)
     #model.add(Masking(mask_value=0.0))
     model.add(CuDNNLSTM(128))
@@ -106,11 +136,11 @@ def generateModel4():
 
     return model
 
-def generateModel5():
+def generateModel5(training = True):
     embeddings_index = loadEmbeddings()
 
     model = Sequential()
-    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)
+    e = generateEmbeddingLayer(training)
     model.add(e)
     #model.add(Masking(mask_value=0.0))
     #model.add(CuDNNLSTM(128,return_sequences=True))
@@ -125,9 +155,9 @@ def generateModel5():
     return model
 
 
-def generateModel6(embeddings_index = embeddings_index):
+def generateModel6(training = True):
     model = Sequential()
-    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)
+    e = generateEmbeddingLayer(training)
     model.add(e)
     # model.add(Masking(mask_value=0.0))
     #model.add(CuDNNLSTM(128,return_sequences=True))
@@ -142,10 +172,10 @@ def generateModel6(embeddings_index = embeddings_index):
     print(model.summary())
     return model
 
-def generateModel30():
+def generateModel30(training = True):
 
     model = Sequential()
-    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)
+    e = generateEmbeddingLayer(training)
     model.add(e)
     #model.add(Masking(mask_value=0.0))
     model.add(LSTM(256))
@@ -159,10 +189,12 @@ def generateModel30():
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
     return model
-def generateModel31():
+
+
+def generateModel31(training):
 
     model = Sequential()
-    e = Embedding(VOCABULARY_SIZE, 100, weights=[embeddings_index], input_length=49, trainable=False)
+    e = generateEmbeddingLayer(training)
     model.add(e)
     #model.add(Masking(mask_value=0.0))
     model.add(LSTM(256, return_sequences=True))
@@ -178,7 +210,7 @@ def generateModel31():
 
     return model
 
-def generateNSModel():
+def generateNSModel(training):
     embeddings_index = loadEmbeddings()
 
     ord = Input(shape=(49,))
