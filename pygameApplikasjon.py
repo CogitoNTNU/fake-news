@@ -1,11 +1,16 @@
 import pygame as pg
+import sys
+import os
+if getattr(sys, 'frozen', False):
+    os.chdir(os.path.dirname(sys.executable))
+
 from predict import generate_text
 pg.init()
 pg.key.set_repeat(300, 25)
 screen = pg.display.set_mode((700, 750))
 COLOR_INACTIVE = pg.Color('black')
 COLOR_ACTIVE = pg.Color('white')
-FONT = pg.font.SysFont('arial', 20)
+FONT = pg.font.Font("fonts/OpenSans-Regular.ttf",20)#pg.font.SysFont('arial', 20)
 
 
 class InputBox:
@@ -96,7 +101,7 @@ def main():
            "in the sentence, but that's because the text is too long to fit the screen.\nIt can look strange sometimes.\n" \
            "This function doesn't check if the text is too high to fit on the height of the surface though, so sometimes " \
            "text will disappear underneath the surface"
-    font = pg.font.SysFont('arial', 20)
+    font = pg.font.Font("fonts/OpenSans-Bold.ttf",20)#pg.font.SysFont('arial', 20)
 
 
     while not done:
@@ -108,8 +113,9 @@ def main():
                         if pg.mouse.get_pos()[1] > 300 and pg.mouse.get_pos()[1] < 350:
                             try:
                                 text = generate_text([input_box1.getText()])[0]
-                            except:
+                            except Exception as e:
                                 text = "Trump skjønner ikke dette ordet"
+                                print(e)
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_CLEAR:
                     text = ''
